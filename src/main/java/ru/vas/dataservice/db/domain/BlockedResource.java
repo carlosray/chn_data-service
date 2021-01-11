@@ -1,11 +1,12 @@
 package ru.vas.dataservice.db.domain;
 
-import lombok.Builder;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
@@ -25,6 +26,9 @@ public class BlockedResource {
     @Indexed
     private String domain;
     private String reason;
+    @JsonFormat(pattern = "yyyy-MM-dd", shape = JsonFormat.Shape.STRING)
     private LocalDate dateOfBlock;
     private Set<String> additionalParams = new HashSet<>();
+    @DBRef(lazy = true)
+    private UpdateResource update;
 }
