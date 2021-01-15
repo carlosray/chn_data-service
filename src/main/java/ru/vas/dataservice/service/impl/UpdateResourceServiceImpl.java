@@ -8,20 +8,34 @@ import ru.vas.dataservice.db.domain.UpdateResource;
 import ru.vas.dataservice.db.repo.UpdateResourceRepository;
 import ru.vas.dataservice.service.UpdateResourceService;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 @Service
 @RequiredArgsConstructor
 public class UpdateResourceServiceImpl implements UpdateResourceService {
     private final UpdateResourceRepository updateResourceRepository;
+    private static final Set<String> correlationIdCache = ConcurrentHashMap.newKeySet();
 
 
     @Override
-    public boolean notExists(UpdateResource updateResource) {
-        return !updateResourceRepository.existsById(updateResource.getCorrelationId());
+    public synchronized boolean exists(UpdateResource updateResource) {
+        return isCached(updateResource) || isExistsInDB(updateResource);
+    }
+
+    private boolean isCached(UpdateResource updateResource) {
+        return correlationIdCache.contains(updateResource.getCorrelationId());
+    }
+
+    private boolean isExistsInDB(UpdateResource updateResource) {
+        return updateResourceRepository.existsById(updateResource.getCorrelationId());
     }
 
     @Override
     public UpdateResource saveNew(UpdateResource updateResource) {
-        return updateResourceRepository.save(updateResource);
+        final UpdateResource saved = updateResourceRepository.save(updateResource);
+        correlationIdCache.add(saved.getCorrelationId());
+        return saved;
     }
 
     @Override
@@ -30,5 +44,4 @@ public class UpdateResourceServiceImpl implements UpdateResourceService {
                 headers.getOrDefault(IntegrationMessageHeaderAccessor.CORRELATION_ID, "unknown_correlation_id").toString(),
                 headers.getOrDefault("file_name", "unknown_file_name").toString());
     }
-
 }

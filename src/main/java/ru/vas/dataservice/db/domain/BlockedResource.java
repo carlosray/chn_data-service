@@ -1,9 +1,7 @@
 package ru.vas.dataservice.db.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -16,14 +14,15 @@ import java.util.Set;
 
 @Document("blockedResource")
 @Data
+@With
+@AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(of = "id")
+@EqualsAndHashCode(of = {"rowLine"})
 public class BlockedResource {
     @Id
-    private String id;
     @Indexed
+    private String rowLine;
     private List<String> ip;
-    @Indexed
     private String domain;
     private String reason;
     @JsonFormat(pattern = "yyyy-MM-dd", shape = JsonFormat.Shape.STRING)

@@ -5,11 +5,11 @@ import ru.vas.dataservice.db.domain.UpdateResource;
 
 public interface UpdateResourceService {
     /**
-     * Проверка что такого обновления еще не было
+     * Проверка было ли уже обновление
      * @param updateResource обновление
-     * @return true - не было, false - было
+     * @return true - было, false - не было
      */
-    boolean notExists(UpdateResource updateResource);
+    boolean exists(UpdateResource updateResource);
 
     /**
      * Сохранить обновление
