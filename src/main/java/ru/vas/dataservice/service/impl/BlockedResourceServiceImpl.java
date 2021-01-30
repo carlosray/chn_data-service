@@ -1,56 +1,44 @@
 package ru.vas.dataservice.service.impl;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.vas.dataservice.db.domain.BlockedResource;
-import ru.vas.dataservice.db.repo.BlockedResourceRepository;
+import ru.vas.dataservice.model.BlockedResourceInfo;
 import ru.vas.dataservice.model.SaveInfo;
 import ru.vas.dataservice.service.BlockedResourceService;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class BlockedResourceServiceImpl implements BlockedResourceService {
-    private final BlockedResourceRepository blockedResourceRepository;
+    private final HashOperations<String, String, String> hashOperations;
+    private static final String HASH_KEY = "blockedResource";
 
-    @Override
-    public List<BlockedResource> saveNew(List<BlockedResource> blockedResources) {
-        final List<BlockedResource> blockedResourcess = blockedResourceRepository.saveAll(blockedResources);
-        log.info("Сохранено " + blockedResourcess.size() + " ресурсов");
-        return blockedResources;
+    public BlockedResourceServiceImpl(RedisTemplate<String, String> redisTemplate) {
+        this.hashOperations = redisTemplate.opsForHash();
     }
 
     @Override
-    public boolean sameNotExists(BlockedResource blockedResource) {
-        return !blockedResourceRepository.existsById(blockedResource.getRowLine());
+    public SaveInfo save(List<BlockedResource> sourceBlockedResources) {
+        Map<String, String> grouped = sourceBlockedResources.stream()
+                .collect(Collectors.toMap(BlockedResource::getRowLine, BlockedResource::getUpdateId, (t, t2) -> t2));
+        hashOperations.putAll(HASH_KEY, grouped);
+        return new SaveInfo(sourceBlockedResources.size());
     }
 
-    @Transactional
     @Override
-    public SaveInfo findSameAndSetUpdate(List<BlockedResource> sourceBlockedResources) {
-        AtomicInteger updated = new AtomicInteger();
-        AtomicInteger created = new AtomicInteger();
-        sourceBlockedResources.parallelStream()
-                .forEach(source -> blockedResourceRepository.findById(source.getRowLine())
-                        .map(resource -> {
-                            resource.setUpdate(source.getUpdate());
-                            return resource;
-                        })
-                        .map(blockedResourceRepository::save)
-                        .map(resource -> {
-                            updated.getAndIncrement();
-                            return resource;
-                        })
-                        .orElseGet(() -> {
-                            created.getAndIncrement();
-                            return blockedResourceRepository.save(source);
-                        }));
-        return new SaveInfo(updated.get(), created.get());
+    public Set<BlockedResourceInfo> searchByIp(String search) {
+        return null;
     }
 
+    @Override
+    public Set<BlockedResourceInfo> searchByDomain(String search) {
+        return null;
+    }
 }

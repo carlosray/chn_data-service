@@ -17,7 +17,6 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.support.TopicPartitionOffset;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHeaders;
 import ru.vas.dataservice.db.domain.BlockedResource;
 import ru.vas.dataservice.db.domain.UpdateResource;
 import ru.vas.dataservice.model.SaveInfo;
@@ -52,14 +51,14 @@ public class DataSourceFlow {
 
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Bean
-    public IntegrationFlow kafkaReadingFlow(ConsumerFactory<String, BlockedResource> consumerFactory,
+    public IntegrationFlow kafkaReadingFlow(ConsumerFactory<String, String> consumerFactory,
                                             @Qualifier("topicPartitions") TopicPartitionOffset[] topicPartitionOffsets,
-                                            @Value("${data-service.kafka.consumer.polling-delay}") Duration duration,
+                                            @Value("${data-service.kafka.consumer.polling-delay-ms}") Long duration,
                                             @Value("${data-service.kafka.consumer.messages-per-poll}") Integer messagesPerPoll) {
         return IntegrationFlows.from(
                 Kafka.inboundChannelAdapter(
                         consumerFactory, new ContainerProperties(topicPartitionOffsets))
-                        .payloadType(BlockedResource.class),
+                        .payloadType(String.class),
                 e -> e.poller(Pollers
                         .fixedDelay(duration)
                         .maxMessagesPerPoll(messagesPerPoll)))
@@ -71,6 +70,7 @@ public class DataSourceFlow {
 
     public IntegrationFlow updateFlow() {
         return updateFlow -> updateFlow
+                .channel(MessageChannels.publishSubscribe())
                 .transform(Message.class, message -> updateResourceService.getUpdateInfo(message.getHeaders()))
                 .<UpdateResource>filter(updateResource -> !updateResourceService.exists(updateResource))
                 .<UpdateResource>handle((updateResource, headers) -> updateResourceService.saveNew(updateResource))
@@ -82,20 +82,19 @@ public class DataSourceFlow {
     @Bean
     public IntegrationFlow toMongoDbFlow() {
         return toMongoDbFlow -> toMongoDbFlow
-                .channel(MessageChannels.executor(this.executor()))
-                .<BlockedResource>handle(this::setUpdateToBlockedResource)
+                .channel(MessageChannels.publishSubscribe(this.executor()))
+                .transform(Message.class, this::getBlockedResource)
                 .aggregate(aggregatorSpecConfig())
                 .handle(updateBlockedResource(),
                         e -> e.advice(logTime("Сохранение заблокированных ресурсов")));
     }
 
-    private BlockedResource setUpdateToBlockedResource(BlockedResource blockedResource, MessageHeaders headers) {
-        blockedResource.setUpdate(updateResourceService.getUpdateInfo(headers));
-        return blockedResource;
+    private BlockedResource getBlockedResource(Message<?> message) {
+        return new BlockedResource((String)message.getPayload(), updateResourceService.getUpdateInfo(message.getHeaders()).getCorrelationId());
     }
 
     private GenericHandler<List<BlockedResource>> updateBlockedResource() {
-        return (blockedResource, headers) -> blockedResourceService.findSameAndSetUpdate(blockedResource);
+        return (blockedResource, headers) -> blockedResourceService.save(blockedResource);
     }
 
     private Consumer<AggregatorSpec> aggregatorSpecConfig() {
@@ -109,7 +108,7 @@ public class DataSourceFlow {
     @Bean
     public IntegrationFlow errorFlow() {
         return IntegrationFlows.from(IntegrationContextUtils.ERROR_CHANNEL_BEAN_NAME)
-                .handle(m -> log.error("Ошибка в Integration Flow {}", m))
+                .handle(m -> log.error("Ошибка в Integration Flow {}", m.getHeaders()))
                 .get();
     }
 
@@ -126,7 +125,7 @@ public class DataSourceFlow {
 
             private String getInfoStatistics(Object execute) {
                 if (execute instanceof SaveInfo) {
-                    return " Сохранено: " + ((SaveInfo) execute).getCreated() + ". Обновлено: " + ((SaveInfo) execute).getUpdated();
+                    return " Сохранено / Обновлено: " + ((SaveInfo) execute).getUpdated();
                 }
                 else {
                     return "";

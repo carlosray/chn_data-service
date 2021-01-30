@@ -1,22 +1,24 @@
 package ru.vas.dataservice.db.domain;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.redis.core.RedisHash;
 
 import java.time.LocalDateTime;
 
-@Document("updateResource")
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(of = "correlationId")
+@RedisHash("updateResource")
 public class UpdateResource {
     @Id
     private String correlationId;
     private String fileName;
-    private final LocalDateTime creationTime = LocalDateTime.now();
+    private LocalDateTime creationTime = LocalDateTime.now();
 
     public UpdateResource(String correlationId, String fileName) {
         this.correlationId = correlationId;

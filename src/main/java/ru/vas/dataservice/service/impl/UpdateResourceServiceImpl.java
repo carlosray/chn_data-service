@@ -28,7 +28,9 @@ public class UpdateResourceServiceImpl implements UpdateResourceService {
     }
 
     private boolean isExistsInDB(UpdateResource updateResource) {
-        return updateResourceRepository.existsById(updateResource.getCorrelationId());
+        final boolean existsById = updateResourceRepository.existsById(updateResource.getCorrelationId());
+        if (existsById) correlationIdCache.add(updateResource.getCorrelationId());
+        return existsById;
     }
 
     @Override
