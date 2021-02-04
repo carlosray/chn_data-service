@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @EqualsAndHashCode(of = "correlationId")
 @RedisHash("updateResource")
-public class UpdateResource {
+public class UpdateResource implements Comparable<UpdateResource>{
     @Id
     private String correlationId;
     private String fileName;
@@ -23,5 +23,10 @@ public class UpdateResource {
     public UpdateResource(String correlationId, String fileName) {
         this.correlationId = correlationId;
         this.fileName = fileName;
+    }
+
+    @Override
+    public int compareTo(UpdateResource o) {
+        return o.creationTime.compareTo(this.creationTime);
     }
 }

@@ -64,7 +64,7 @@ public class DataSourceFlow {
                         .maxMessagesPerPoll(messagesPerPoll)))
                 .routeToRecipients(recipientSpec -> recipientSpec
                         .recipientFlow(updateFlow())
-                        .recipientFlow(toMongoDbFlow()))
+                        .recipientFlow(toDbFlow()))
                 .get();
     }
 
@@ -80,8 +80,8 @@ public class DataSourceFlow {
     }
 
     @Bean
-    public IntegrationFlow toMongoDbFlow() {
-        return toMongoDbFlow -> toMongoDbFlow
+    public IntegrationFlow toDbFlow() {
+        return toDbFlow -> toDbFlow
                 .channel(MessageChannels.publishSubscribe(this.executor()))
                 .transform(Message.class, this::getBlockedResource)
                 .aggregate(aggregatorSpecConfig())

@@ -16,7 +16,26 @@ public interface BlockedResourceService {
      */
     SaveInfo save(List<BlockedResource> sourceBlockedResources);
 
-    Set<BlockedResourceInfo> searchByIp(String search);
+    /**
+     * Поиск по IP адресу
+     * @param search IP адрес для поиска
+     * @param isActual искать только последнее обновление
+     * @return инфо по заблокированному ресурсу
+     */
+    Set<BlockedResourceInfo> searchByIp(String search, boolean isActual);
 
-    Set<BlockedResourceInfo> searchByDomain(String search);
+    /**
+     * Поиск по домену
+     * @param search домен для поиска
+     * @param isActual искать только последнее обновление
+     * @return инфо по заблокированному ресурсу
+     */
+    Set<BlockedResourceInfo> searchByDomain(String search, boolean isActual);
+
+    /**
+     * Кол-во заблокированных ресурсов
+     * @param isActual искать только последнее обновление
+     * @return кол-во
+     */
+    long count(boolean isActual);
 }

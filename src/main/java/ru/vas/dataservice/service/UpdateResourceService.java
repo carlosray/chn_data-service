@@ -2,6 +2,9 @@ package ru.vas.dataservice.service;
 
 import org.springframework.messaging.MessageHeaders;
 import ru.vas.dataservice.db.domain.UpdateResource;
+import ru.vas.dataservice.exception.UpdateNotFoundException;
+
+import java.util.List;
 
 public interface UpdateResourceService {
     /**
@@ -24,4 +27,21 @@ public interface UpdateResourceService {
      * @return обновление
      */
     UpdateResource getUpdateInfo(MessageHeaders headers);
+
+    /**
+     * Получить актуальное (последнее) обновление
+     * @return обновление
+     */
+    UpdateResource getActualUpdate() throws UpdateNotFoundException;
+
+    /**
+     * Получить кол-во обновлений
+     * @return кол-во обновлений
+     */
+    long countOfUpdates();
+
+    /**
+     * Найти все обновления
+     */
+    Iterable<UpdateResource> findAll();
 }

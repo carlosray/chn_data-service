@@ -1,15 +1,19 @@
 package ru.vas.dataservice.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.integration.IntegrationMessageHeaderAccessor;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.stereotype.Service;
 import ru.vas.dataservice.db.domain.UpdateResource;
 import ru.vas.dataservice.db.repo.UpdateResourceRepository;
+import ru.vas.dataservice.exception.UpdateNotFoundException;
 import ru.vas.dataservice.service.UpdateResourceService;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +23,7 @@ public class UpdateResourceServiceImpl implements UpdateResourceService {
 
 
     @Override
-    public synchronized boolean exists(UpdateResource updateResource) {
+    public boolean exists(UpdateResource updateResource) {
         return isCached(updateResource) || isExistsInDB(updateResource);
     }
 
@@ -34,6 +38,7 @@ public class UpdateResourceServiceImpl implements UpdateResourceService {
     }
 
     @Override
+    @CachePut("updates")
     public UpdateResource saveNew(UpdateResource updateResource) {
         final UpdateResource saved = updateResourceRepository.save(updateResource);
         correlationIdCache.add(saved.getCorrelationId());
@@ -41,9 +46,29 @@ public class UpdateResourceServiceImpl implements UpdateResourceService {
     }
 
     @Override
+    @Cacheable("updateInfo")
     public UpdateResource getUpdateInfo(MessageHeaders headers) {
         return new UpdateResource(
                 headers.getOrDefault(IntegrationMessageHeaderAccessor.CORRELATION_ID, "unknown_correlation_id").toString(),
                 headers.getOrDefault("file_name", "unknown_file_name").toString());
+    }
+
+    @Override
+    @Cacheable("updates")
+    public UpdateResource getActualUpdate() throws UpdateNotFoundException {
+        return StreamSupport.stream(updateResourceRepository.findAll().spliterator(), false)
+                .sorted()
+                .findFirst()
+                .orElseThrow(() -> new UpdateNotFoundException("Обновлений не найдено"));
+    }
+
+    @Override
+    public long countOfUpdates() {
+        return updateResourceRepository.count();
+    }
+
+    @Override
+    public Iterable<UpdateResource> findAll() {
+        return updateResourceRepository.findAll();
     }
 }

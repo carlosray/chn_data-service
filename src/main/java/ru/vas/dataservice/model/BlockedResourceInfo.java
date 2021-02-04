@@ -1,6 +1,7 @@
 package ru.vas.dataservice.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 @Getter
 @ToString
 public class BlockedResourceInfo {
+    @JsonIgnore
     private final String rowLine;
     private List<String> ip;
     private String domain;
