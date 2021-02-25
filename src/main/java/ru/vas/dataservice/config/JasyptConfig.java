@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EncryptablePropertySources(value = {
-        @EncryptablePropertySource("application.properties"),
+        @EncryptablePropertySource("bootstrap.properties"),
 })
 public class JasyptConfig {
 

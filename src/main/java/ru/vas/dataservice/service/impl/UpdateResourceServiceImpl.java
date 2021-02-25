@@ -57,8 +57,7 @@ public class UpdateResourceServiceImpl implements UpdateResourceService {
     @Cacheable("updates")
     public UpdateResource getActualUpdate() throws UpdateNotFoundException {
         return StreamSupport.stream(updateResourceRepository.findAll().spliterator(), false)
-                .sorted()
-                .findFirst()
+                .max((u1, u2) -> u2.getCreationTime().compareTo(u1.getCreationTime()))
                 .orElseThrow(() -> new UpdateNotFoundException("Обновлений не найдено"));
     }
 
