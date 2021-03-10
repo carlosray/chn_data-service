@@ -2,15 +2,13 @@ package ru.vas.dataservice.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.vas.dataservice.db.domain.UpdateResource;
 import ru.vas.dataservice.model.BlockedResourceInfo;
 import ru.vas.dataservice.service.BlockedResourceService;
 import ru.vas.dataservice.service.UpdateResourceService;
 
+import java.util.Map;
 import java.util.Set;
 
 @RestController
@@ -30,6 +28,12 @@ public class RestDataController {
     public ResponseEntity<Set<BlockedResourceInfo>> searchDomain(@RequestParam String search,
                                                                  @RequestParam(required = false, defaultValue = "true") boolean actual) {
         return ResponseEntity.ok(blockedResourceService.searchByDomain(search, actual));
+    }
+
+    @PostMapping("blocked/search/ip/status")
+    public ResponseEntity<Map<String, Boolean>> searchIpStatus(@RequestBody Set<String> search,
+                                                               @RequestParam(required = false, defaultValue = "true") boolean actual) {
+        return ResponseEntity.ok(blockedResourceService.searchStatusByIp(search, actual));
     }
 
     @GetMapping("blocked/count")

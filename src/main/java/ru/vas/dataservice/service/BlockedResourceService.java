@@ -5,6 +5,7 @@ import ru.vas.dataservice.model.BlockedResourceInfo;
 import ru.vas.dataservice.model.SaveInfo;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface BlockedResourceService {
@@ -23,6 +24,14 @@ public interface BlockedResourceService {
      * @return инфо по заблокированному ресурсу
      */
     Set<BlockedResourceInfo> searchByIp(String search, boolean isActual);
+
+    /**
+     * Поиск статуса по IP
+     * @param search поисковые IP
+     * @param isActual искать только последнее обновление
+     * @return мапа IP : статус
+     */
+    Map<String, Boolean> searchStatusByIp(Set<String> search, boolean isActual);
 
     /**
      * Поиск по домену

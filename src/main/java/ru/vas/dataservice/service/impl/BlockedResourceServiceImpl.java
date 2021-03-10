@@ -1,7 +1,6 @@
 package ru.vas.dataservice.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -14,9 +13,8 @@ import ru.vas.dataservice.model.SaveInfo;
 import ru.vas.dataservice.service.BlockedResourceService;
 import ru.vas.dataservice.service.UpdateResourceService;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -46,6 +44,16 @@ public class BlockedResourceServiceImpl implements BlockedResourceService {
         return getSearchInfoStream(search, isActual)
                 .filter(info -> info.getIp().contains(search))
                 .collect(Collectors.toSet());
+    }
+
+    @Override
+    public Map<String, Boolean> searchStatusByIp(Set<String> search, boolean isActual) {
+        Map<String, Boolean> result = new ConcurrentHashMap<>();
+        search.parallelStream().forEach(ip -> {
+            result.put(ip, this.getSearchInfoStream(ip, isActual)
+                    .anyMatch(info -> info.getIp().contains(ip)));
+        });
+        return result;
     }
 
     @Override
