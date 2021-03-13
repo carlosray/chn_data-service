@@ -1,5 +1,6 @@
 package ru.vas.dataservice.service.impl;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.HashOperations;
@@ -14,7 +15,6 @@ import ru.vas.dataservice.service.BlockedResourceService;
 import ru.vas.dataservice.service.UpdateResourceService;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -48,8 +48,8 @@ public class BlockedResourceServiceImpl implements BlockedResourceService {
 
     @Override
     public Map<String, Boolean> searchStatusByIp(Set<String> search, boolean isActual) {
-        Map<String, Boolean> result = new ConcurrentHashMap<>();
-        search.parallelStream().forEach(ip -> {
+        Map<String, Boolean> result = new HashMap<>();
+        search.forEach(ip -> {
             result.put(ip, this.getSearchInfoStream(ip, isActual)
                     .anyMatch(info -> info.getIp().contains(ip)));
         });
@@ -69,11 +69,14 @@ public class BlockedResourceServiceImpl implements BlockedResourceService {
                 .map(entry -> new BlockedResourceInfo(entry.getKey()));
     }
 
+    @SneakyThrows
     private Stream<Map.Entry<String, String>> getSearchRowStream(String search) {
         final Cursor<Map.Entry<String, String>> scan = hashOperations
                 .scan(HASH_KEY, ScanOptions.scanOptions().match(String.format("*%s*", search)).build());
         Iterable<Map.Entry<String, String>> iterable = () -> scan;
-        return StreamSupport.stream(iterable.spliterator(), false);
+        final Set<Map.Entry<String, String>> entries = StreamSupport.stream(iterable.spliterator(), false).collect(Collectors.toSet());
+        scan.close();
+        return entries.stream();
     }
 
     private boolean isActualUpdate(String correlationId) {
