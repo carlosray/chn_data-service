@@ -12,11 +12,11 @@ import org.springframework.context.annotation.Bean;
 public class DataServiceApplication {
 
     public static void main(String[] args) {
-
         SpringApplication.run(DataServiceApplication.class, args);
     }
+
     @Bean
     public CacheManager cacheManager() {
-        return new ConcurrentMapCacheManager("updates", "updateInfo", "correlationId");
+        return new ConcurrentMapCacheManager("updates", "updateInfo");
     }
 }

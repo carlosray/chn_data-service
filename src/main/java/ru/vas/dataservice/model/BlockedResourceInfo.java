@@ -1,86 +1,36 @@
 package ru.vas.dataservice.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.ToString;
-import org.apache.commons.lang3.StringUtils;
+import ru.vas.dataservice.db.domain.BlockedResource;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Getter
 @ToString
 public class BlockedResourceInfo {
-    @JsonIgnore
-    private final String rowLine;
-    private List<String> ip;
-    private String domain;
-    private String reason;
+    private final List<String> ip;
+    private final String domain;
+    private final String reason;
     @JsonFormat(pattern = "yyyy-MM-dd", shape = JsonFormat.Shape.STRING)
-    private LocalDate dateOfBlock;
-    private final Set<String> additionalParams = new HashSet<>();
+    private final LocalDate dateOfBlock;
+    private final Set<String> additionalParams;
 
-    public BlockedResourceInfo(String line) {
-        this.rowLine = line;
-        setUp(line);
+    public BlockedResourceInfo(BlockedResource blockedResource) {
+        this.ip = blockedResource.getIp();
+        this.domain = blockedResource.getDomain();
+        this.reason = blockedResource.getReason();
+        this.dateOfBlock = blockedResource.getDateOfBlock();
+        this.additionalParams = blockedResource.getAdditionalParams();
     }
 
-    private void setUp(String line) {
-        final String[] params = line.split(Delimiters.SEMICOLON.getValue());
-        setIp(params[0]);
-        setDomain(params[1]);
-        addAdditionalParam(params[2]);
-        setReason(params[3]);
-        setNumber(params[4]);
-        setDateOfBlock(params[5]);
-    }
-
-    private void setIp(String param) {
-        this.ip = Arrays.stream(param.split(Delimiters.VERT_LINE.getValue()))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toList());
-    }
-
-    private void setDomain(String param) {
-        this.domain = param.trim();
-    }
-
-    private void addAdditionalParam(String param) {
-        final String trimmedParam = param.trim();
-        if (StringUtils.isNotBlank(trimmedParam)) {
-            additionalParams.add(trimmedParam);
-        }
-    }
-
-    private void setReason(String param) {
-        this.reason = param.trim();
-    }
-
-    private void setNumber(String param) {
-        additionalParams.add(param.trim());
-    }
-
-    private void setDateOfBlock(String param) {
-        try {
-            this.dateOfBlock = LocalDate.parse(param);
-        } catch (DateTimeParseException ex) {
-            addAdditionalParam(param);
-        }
-    }
-
-    @Getter
-    public enum Delimiters {
-        SEMICOLON(";"),
-        VERT_LINE("\\|");
-
-        private String value;
-
-        Delimiters(String delimiter) {
-            this.value = delimiter;
-        }
+    public static Set<BlockedResourceInfo> convertToDTO(Set<BlockedResource> blockedResources) {
+        return blockedResources.stream()
+                .map(BlockedResourceInfo::new)
+                .collect(Collectors.toSet());
     }
 }

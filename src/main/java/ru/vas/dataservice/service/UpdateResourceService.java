@@ -4,8 +4,6 @@ import org.springframework.messaging.MessageHeaders;
 import ru.vas.dataservice.db.domain.UpdateResource;
 import ru.vas.dataservice.exception.UpdateNotFoundException;
 
-import java.util.List;
-
 public interface UpdateResourceService {
     /**
      * Проверка было ли уже обновление

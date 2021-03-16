@@ -1,7 +1,7 @@
 package ru.vas.dataservice.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.integration.IntegrationMessageHeaderAccessor;
 import org.springframework.messaging.MessageHeaders;
@@ -13,7 +13,6 @@ import ru.vas.dataservice.service.UpdateResourceService;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +37,7 @@ public class UpdateResourceServiceImpl implements UpdateResourceService {
     }
 
     @Override
-    @CachePut("updates")
+    @CacheEvict(value = {"updates", "updateInfo"}, allEntries = true)
     public UpdateResource saveNew(UpdateResource updateResource) {
         final UpdateResource saved = updateResourceRepository.save(updateResource);
         correlationIdCache.add(saved.getCorrelationId());
@@ -56,8 +55,7 @@ public class UpdateResourceServiceImpl implements UpdateResourceService {
     @Override
     @Cacheable("updates")
     public UpdateResource getActualUpdate() throws UpdateNotFoundException {
-        return StreamSupport.stream(updateResourceRepository.findAll().spliterator(), false)
-                .max((u1, u2) -> u2.getCreationTime().compareTo(u1.getCreationTime()))
+        return updateResourceRepository.findTopByOrderByCreationTimeDesc()
                 .orElseThrow(() -> new UpdateNotFoundException("Обновлений не найдено"));
     }
 

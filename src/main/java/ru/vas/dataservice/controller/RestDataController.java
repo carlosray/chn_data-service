@@ -5,11 +5,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.vas.dataservice.db.domain.UpdateResource;
 import ru.vas.dataservice.model.BlockedResourceInfo;
+import ru.vas.dataservice.model.CheckStatusDTO;
 import ru.vas.dataservice.service.BlockedResourceService;
 import ru.vas.dataservice.service.UpdateResourceService;
 
-import java.util.Map;
 import java.util.Set;
+
+import static ru.vas.dataservice.model.BlockedResourceInfo.convertToDTO;
 
 @RestController
 @RequestMapping("api")
@@ -21,19 +23,19 @@ public class RestDataController {
     @GetMapping("blocked/search/ip")
     public ResponseEntity<Set<BlockedResourceInfo>> searchId(@RequestParam String search,
                                                              @RequestParam(required = false, defaultValue = "true") boolean actual) {
-        return ResponseEntity.ok(blockedResourceService.searchByIp(search, actual));
+        return ResponseEntity.ok(convertToDTO(blockedResourceService.searchByIp(search, actual)));
     }
 
     @GetMapping("blocked/search/domain")
     public ResponseEntity<Set<BlockedResourceInfo>> searchDomain(@RequestParam String search,
                                                                  @RequestParam(required = false, defaultValue = "true") boolean actual) {
-        return ResponseEntity.ok(blockedResourceService.searchByDomain(search, actual));
+        return ResponseEntity.ok(convertToDTO(blockedResourceService.searchByDomain(search, actual)));
     }
 
     @PostMapping("blocked/search/ip/status")
-    public ResponseEntity<Map<String, Boolean>> searchIpStatus(@RequestBody Set<String> search,
-                                                               @RequestParam(required = false, defaultValue = "true") boolean actual) {
-        return ResponseEntity.ok(blockedResourceService.searchStatusByIp(search, actual));
+    public ResponseEntity<Set<CheckStatusDTO>> searchIpStatus(@RequestBody Set<CheckStatusDTO> checkStatus,
+                                                              @RequestParam(required = false, defaultValue = "true") boolean actual) {
+        return ResponseEntity.ok(blockedResourceService.searchStatuses(checkStatus, actual));
     }
 
     @GetMapping("blocked/count")

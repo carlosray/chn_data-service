@@ -1,11 +1,10 @@
 package ru.vas.dataservice.service;
 
 import ru.vas.dataservice.db.domain.BlockedResource;
-import ru.vas.dataservice.model.BlockedResourceInfo;
+import ru.vas.dataservice.model.CheckStatusDTO;
 import ru.vas.dataservice.model.SaveInfo;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public interface BlockedResourceService {
@@ -23,15 +22,15 @@ public interface BlockedResourceService {
      * @param isActual искать только последнее обновление
      * @return инфо по заблокированному ресурсу
      */
-    Set<BlockedResourceInfo> searchByIp(String search, boolean isActual);
+    Set<BlockedResource> searchByIp(String search, boolean isActual);
 
     /**
-     * Поиск статуса по IP
-     * @param search поисковые IP
+     * Поиск статуса по IP или домену
+     * @param search поисковые IP или домены
      * @param isActual искать только последнее обновление
      * @return мапа IP : статус
      */
-    Map<String, Boolean> searchStatusByIp(Set<String> search, boolean isActual);
+    Set<CheckStatusDTO> searchStatuses(Set<CheckStatusDTO> search, boolean isActual);
 
     /**
      * Поиск по домену
@@ -39,7 +38,7 @@ public interface BlockedResourceService {
      * @param isActual искать только последнее обновление
      * @return инфо по заблокированному ресурсу
      */
-    Set<BlockedResourceInfo> searchByDomain(String search, boolean isActual);
+    Set<BlockedResource> searchByDomain(String search, boolean isActual);
 
     /**
      * Кол-во заблокированных ресурсов
