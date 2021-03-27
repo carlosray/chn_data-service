@@ -14,19 +14,16 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"rowLine"})
+@EqualsAndHashCode(of = {"id"})
 @Document(indexName = "blocked-resource", createIndex = true)
 public class BlockedResource {
     @Id
-    private String rowLine;
+    private String id;
     @Field(type = FieldType.Text)
     private String updateId;
     @Field(type = FieldType.Text)
@@ -40,9 +37,9 @@ public class BlockedResource {
     private final Set<String> additionalParams = new HashSet<>();
 
     public BlockedResource(String line, String updateId) {
-        this.rowLine = line;
         this.updateId = updateId;
         setUp(line);
+        this.id = UUID.nameUUIDFromBytes(line.getBytes()).toString();
     }
 
     private void setUp(String line) {
@@ -94,7 +91,7 @@ public class BlockedResource {
         SEMICOLON(";"),
         VERT_LINE("\\|");
 
-        private String value;
+        private final String value;
 
         Delimiters(String delimiter) {
             this.value = delimiter;

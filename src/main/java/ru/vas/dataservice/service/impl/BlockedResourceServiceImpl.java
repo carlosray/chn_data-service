@@ -22,6 +22,7 @@ public class BlockedResourceServiceImpl implements BlockedResourceService {
     private final UpdateResourceService updateResourceService;
     private final BlockedResourceRepository blockedResourceRepository;
 
+    @Transactional
     @Override
     public SaveInfo save(List<BlockedResource> sourceBlockedResources) {
         blockedResourceRepository.saveAll(sourceBlockedResources);

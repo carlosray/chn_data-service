@@ -10,6 +10,8 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
+import java.time.Duration;
+
 @Configuration
 @EnableElasticsearchRepositories(basePackages = "ru.vas.dataservice.db.repo")
 public class ElasticConfig {
@@ -20,6 +22,8 @@ public class ElasticConfig {
     public RestHighLevelClient client() {
         ClientConfiguration clientConfiguration = ClientConfiguration.builder()
                 .connectedTo(elasticHostAndPort)
+                .withSocketTimeout(Duration.ofMinutes(1))
+                .withConnectTimeout(Duration.ofSeconds(30))
                 .build();
 
         return RestClients.create(clientConfiguration).rest();
